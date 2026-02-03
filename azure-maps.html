@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Maps Tester</title>
+
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="shared-styles.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Azure Maps SDK -->
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>☁️ Azure Maps Tester</h1>
+            <p class="subtitle">Microsoft's enterprise mapping solution with weather data</p>
+        </div>
+
+        <div class="api-key-notice">
+            <strong>🔑 Subscription Key Required:</strong> Get your free Azure Maps key at <a
+                href="https://portal.azure.com/" target="_blank"
+                style="color: #78350f; text-decoration: underline;">Azure Portal</a> (1,000 free transactions/day)
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="apiKeyInput" placeholder="Enter your Azure Maps subscription key here...">
+                <button id="loadMapBtn" class="btn-primary">🔑 Load Map</button>
+            </div>
+
+            <div id="mapControls" style="display: none;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search for a location...">
+                    <button id="searchBtn" class="btn-primary">🔍 Search</button>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="currentLocationBtn" class="btn-secondary">📍 My Location</button>
+                    <button id="clearMarkersBtn" class="btn-danger">🗑️ Clear Markers</button>
+                    <button id="zoomInBtn" class="btn-secondary">➕ Zoom In</button>
+                    <button id="zoomOutBtn" class="btn-secondary">➖ Zoom Out</button>
+                </div>
+
+                <div class="map-style">
+                    <label>Map Style:</label>
+                    <select id="mapStyle">
+                        <option value="road">Road</option>
+                        <option value="satellite">Satellite</option>
+                        <option value="satellite_road_labels">Satellite + Labels</option>
+                        <option value="night">Night</option>
+                        <option value="grayscale_dark">Grayscale Dark</option>
+                        <option value="grayscale_light">Grayscale Light</option>
+                    </select>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="toggleTrafficBtn" class="btn-secondary">🚦 Toggle Traffic</button>
+                    <button id="toggleWeatherBtn" class="btn-secondary">🌤️ Toggle Weather</button>
+                </div>
+
+                <div class="info">
+                    <div class="info-item">
+                        <span class="info-label">Markers:</span>
+                        <span id="markerCount" class="info-value">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Zoom Level:</span>
+                        <span id="zoomLevel" class="info-value">10</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Traffic:</span>
+                        <span id="trafficStatus" class="info-value">OFF</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Weather:</span>
+                        <span id="weatherStatus" class="info-value">OFF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="guide">
+            <h3>💡 Azure Maps Features</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Enter your Azure Maps subscription key and click "Load Map"</li>
+                <li><strong>Microsoft Integration:</strong> Seamlessly integrates with Azure services</li>
+                <li><strong>Weather Data:</strong> Real-time weather overlay with temperature and conditions</li>
+                <li><strong>Traffic Layer:</strong> Live traffic flow and incident data</li>
+                <li><strong>6 Styles:</strong> Road, Satellite, Night, and Grayscale modes</li>
+                <li><strong>Enterprise Ready:</strong> Built for business applications with SLA guarantees</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let markers = [];
+        let subscriptionKey = '';
+        let trafficEnabled = false;
+        let weatherEnabled = false;
+        let weatherLayer = null;
+
+        document.getElementById('loadMapBtn').addEventListener('click', loadAzureMaps);
+
+        function loadAzureMaps() {
+            subscriptionKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!subscriptionKey) {
+                alert('Please enter your Azure Maps subscription key');
+                return;
+            }
+
+            try {
+                initMap();
+            } catch (error) {
+                alert('Failed to load Azure Maps. Check your subscription key: ' + error.message);
+            }
+        }
+
+        function initMap() {
+            map = new atlas.Map('map', {
+                center: [106.8456, -6.2088],
+                zoom: 10,
+                style: 'road',
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: subscriptionKey
+                }
+            });
+
+            map.events.add('ready', () => {
+                // Show controls
+                document.getElementById('mapControls').style.display = 'block';
+
+                // Add zoom controls
+                map.controls.add(new atlas.control.ZoomControl(), {
+                    position: 'top-right'
+                });
+
+                // Add compass control
+                map.controls.add(new atlas.control.CompassControl(), {
+                    position: 'top-right'
+                });
+
+                // Add pitch control
+                map.controls.add(new atlas.control.PitchControl(), {
+                    position: 'top-right'
+                });
+
+                // Click to add marker
+                map.events.add('click', (e) => {
+                    addMarker(e.position);
+                });
+
+                // Update zoom level
+                map.events.add('zoom', () => {
+                    document.getElementById('zoomLevel').textContent = Math.round(map.getCamera().zoom);
+                });
+
+                initEventListeners();
+                console.log('Azure Maps initialized successfully!');
+            });
+        }
+
+        function initEventListeners() {
+            document.getElementById('searchBtn').addEventListener('click', searchLocation);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchLocation();
+            });
+            document.getElementById('currentLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('clearMarkersBtn').addEventListener('click', clearMarkers);
+            document.getElementById('zoomInBtn').addEventListener('click', () => {
+                map.setCamera({ zoom: map.getCamera().zoom + 1 });
+            });
+            document.getElementById('zoomOutBtn').addEventListener('click', () => {
+                map.setCamera({ zoom: map.getCamera().zoom - 1 });
+            });
+            document.getElementById('mapStyle').addEventListener('change', (e) => changeMapStyle(e.target.value));
+            document.getElementById('toggleTrafficBtn').addEventListener('click', toggleTraffic);
+            document.getElementById('toggleWeatherBtn').addEventListener('click', toggleWeather);
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a location to search');
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `https://atlas.microsoft.com/search/address/json?api-version=1.0&query=${encodeURIComponent(query)}&subscription-key=${subscriptionKey}&limit=1`
+                );
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    const { lat, lon } = result.position;
+                    const address = result.address.freeformAddress;
+
+                    map.setCamera({
+                        center: [lon, lat],
+                        zoom: 14
+                    });
+
+                    addMarker([lon, lat], address);
+                } else {
+                    alert('Location not found');
+                }
+            } catch (error) {
+                alert('Search error: ' + error.message);
+            }
+        }
+
+        function addMarker(position, title = null) {
+            const marker = new atlas.HtmlMarker({
+                position: position,
+                color: '#6366f1',
+                text: (markers.length + 1).toString()
+            });
+
+            map.markers.add(marker);
+
+            const popup = new atlas.Popup({
+                content: `
+                    <div style="font-family: 'Inter', sans-serif; padding: 10px;">
+                        <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 14px;">
+                            ${title || `Marker ${markers.length + 1}`}
+                        </h3>
+                        <p style="margin: 0; color: #475569; font-size: 12px;">
+                            <strong>Lat:</strong> ${position[1].toFixed(6)}<br>
+                            <strong>Lng:</strong> ${position[0].toFixed(6)}
+                        </p>
+                    </div>
+                `,
+                position: position,
+                pixelOffset: [0, -30]
+            });
+
+            map.events.add('click', marker, () => {
+                popup.open(map);
+            });
+
+            markers.push({ marker, popup });
+            document.getElementById('markerCount').textContent = markers.length;
+        }
+
+        function clearMarkers() {
+            markers.forEach(item => {
+                map.markers.remove(item.marker);
+                item.popup.close();
+            });
+            markers = [];
+            document.getElementById('markerCount').textContent = 0;
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        map.setCamera({
+                            center: [longitude, latitude],
+                            zoom: 14
+                        });
+                        addMarker([longitude, latitude], 'Your Current Location');
+                    },
+                    () => alert('Error: Unable to retrieve your location')
+                );
+            } else {
+                alert('Geolocation is not supported by your browser');
+            }
+        }
+
+        function changeMapStyle(style) {
+            map.setStyle({ style: style });
+        }
+
+        function toggleTraffic() {
+            trafficEnabled = !trafficEnabled;
+
+            map.setTraffic({
+                incidents: trafficEnabled,
+                flow: trafficEnabled ? 'relative' : 'none'
+            });
+
+            document.getElementById('trafficStatus').textContent = trafficEnabled ? 'ON' : 'OFF';
+        }
+
+        function toggleWeather() {
+            weatherEnabled = !weatherEnabled;
+
+            if (weatherEnabled) {
+                if (!weatherLayer) {
+                    weatherLayer = new atlas.layer.TileLayer({
+                        tileUrl: `https://atlas.microsoft.com/map/tile?api-version=2.0&tilesetId=microsoft.weather.radar.main&zoom={z}&x={x}&y={y}&subscription-key=${subscriptionKey}`,
+                        opacity: 0.7,
+                        tileSize: 256
+                    });
+                    map.layers.add(weatherLayer);
+                }
+                document.getElementById('weatherStatus').textContent = 'ON';
+            } else {
+                if (weatherLayer) {
+                    map.layers.remove(weatherLayer);
+                    weatherLayer = null;
+                }
+                document.getElementById('weatherStatus').textContent = 'OFF';
+            }
+        }
+    </script>
+</body>
+
+</html>
