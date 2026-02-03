@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TomTom Maps Tester</title>
+
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="shared-styles.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- TomTom Maps SDK -->
+    <link rel='stylesheet' type='text/css' href='https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps.css'>
+    <script src='https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps-web.min.js'></script>
+    <script src='https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/services/services-web.min.js'></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>🚗 TomTom Maps Tester</h1>
+            <p class="subtitle">Automotive-grade maps with real-time traffic data</p>
+        </div>
+
+        <div class="api-key-notice">
+            <strong>🔑 API Key Required:</strong> Get your free TomTom API key at <a
+                href="https://developer.tomtom.com/" target="_blank"
+                style="color: #78350f; text-decoration: underline;">developer.tomtom.com</a> (2,500 free requests/day)
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="apiKeyInput" placeholder="Enter your TomTom API key here...">
+                <button id="loadMapBtn" class="btn-primary">🔑 Load Map</button>
+            </div>
+
+            <div id="mapControls" style="display: none;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search for a location...">
+                    <button id="searchBtn" class="btn-primary">🔍 Search</button>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="currentLocationBtn" class="btn-secondary">📍 My Location</button>
+                    <button id="clearMarkersBtn" class="btn-danger">🗑️ Clear Markers</button>
+                    <button id="zoomInBtn" class="btn-secondary">➕ Zoom In</button>
+                    <button id="zoomOutBtn" class="btn-secondary">➖ Zoom Out</button>
+                </div>
+
+                <div class="map-style">
+                    <label>Map Style:</label>
+                    <select id="mapStyle">
+                        <option value="basic_main">Basic Main</option>
+                        <option value="hybrid_main">Hybrid</option>
+                        <option value="basic_night">Night</option>
+                        <option value="reduced_main">Reduced</option>
+                    </select>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="toggleTrafficBtn" class="btn-secondary">🚦 Toggle Traffic Flow</button>
+                    <button id="toggleIncidentsBtn" class="btn-secondary">⚠️ Toggle Incidents</button>
+                </div>
+
+                <div class="info">
+                    <div class="info-item">
+                        <span class="info-label">Markers:</span>
+                        <span id="markerCount" class="info-value">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Zoom Level:</span>
+                        <span id="zoomLevel" class="info-value">10</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Traffic:</span>
+                        <span id="trafficStatus" class="info-value">OFF</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Incidents:</span>
+                        <span id="incidentsStatus" class="info-value">OFF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="guide">
+            <h3>💡 TomTom Features</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Enter your TomTom API key and click "Load Map"</li>
+                <li><strong>Traffic Flow:</strong> Real-time traffic flow visualization on roads</li>
+                <li><strong>Traffic Incidents:</strong> See accidents, road closures, and construction</li>
+                <li><strong>Automotive Focus:</strong> Designed for navigation and routing applications</li>
+                <li><strong>4 Styles:</strong> Basic, Hybrid, Night, and Reduced modes</li>
+                <li><strong>POI Search:</strong> Find points of interest near any location</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let markers = [];
+        let apiKey = '';
+        let trafficEnabled = false;
+        let incidentsEnabled = false;
+
+        document.getElementById('loadMapBtn').addEventListener('click', loadTomTom);
+
+        function loadTomTom() {
+            apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!apiKey) {
+                alert('Please enter your TomTom API key');
+                return;
+            }
+
+            try {
+                initMap();
+            } catch (error) {
+                alert('Failed to load TomTom Maps. Check your API key: ' + error.message);
+            }
+        }
+
+        function initMap() {
+            map = tt.map({
+                key: apiKey,
+                container: 'map',
+                center: [106.8456, -6.2088],
+                zoom: 10,
+                style: 'basic_main'
+            });
+
+            map.on('load', () => {
+                // Show controls
+                document.getElementById('mapControls').style.display = 'block';
+
+                // Add zoom controls
+                map.addControl(new tt.NavigationControl());
+
+                // Click to add marker
+                map.on('click', (e) => {
+                    addMarker(e.lngLat);
+                });
+
+                // Update zoom level
+                map.on('zoom', () => {
+                    document.getElementById('zoomLevel').textContent = Math.round(map.getZoom());
+                });
+
+                initEventListeners();
+                console.log('TomTom Maps initialized successfully!');
+            });
+        }
+
+        function initEventListeners() {
+            document.getElementById('searchBtn').addEventListener('click', searchLocation);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchLocation();
+            });
+            document.getElementById('currentLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('clearMarkersBtn').addEventListener('click', clearMarkers);
+            document.getElementById('zoomInBtn').addEventListener('click', () => map.zoomIn());
+            document.getElementById('zoomOutBtn').addEventListener('click', () => map.zoomOut());
+            document.getElementById('mapStyle').addEventListener('change', (e) => changeMapStyle(e.target.value));
+            document.getElementById('toggleTrafficBtn').addEventListener('click', toggleTraffic);
+            document.getElementById('toggleIncidentsBtn').addEventListener('click', toggleIncidents);
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a location to search');
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json?key=${apiKey}&limit=1`
+                );
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    const { lat, lon } = result.position;
+                    const address = result.address.freeformAddress;
+
+                    map.flyTo({
+                        center: [lon, lat],
+                        zoom: 14
+                    });
+
+                    addMarker({ lng: lon, lat: lat }, address);
+                } else {
+                    alert('Location not found');
+                }
+            } catch (error) {
+                alert('Search error: ' + error.message);
+            }
+        }
+
+        function addMarker(lngLat, title = null) {
+            const popup = new tt.Popup({ offset: 35 }).setHTML(`
+                <div style="font-family: 'Inter', sans-serif; padding: 5px;">
+                    <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 14px;">
+                        ${title || `Marker ${markers.length + 1}`}
+                    </h3>
+                    <p style="margin: 0; color: #475569; font-size: 12px;">
+                        <strong>Lat:</strong> ${lngLat.lat.toFixed(6)}<br>
+                        <strong>Lng:</strong> ${lngLat.lng.toFixed(6)}
+                    </p>
+                </div>
+            `);
+
+            const marker = new tt.Marker({ color: '#6366f1' })
+                .setLngLat([lngLat.lng, lngLat.lat])
+                .setPopup(popup)
+                .addTo(map);
+
+            markers.push(marker);
+            document.getElementById('markerCount').textContent = markers.length;
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => marker.remove());
+            markers = [];
+            document.getElementById('markerCount').textContent = 0;
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        map.flyTo({
+                            center: [longitude, latitude],
+                            zoom: 14
+                        });
+                        addMarker({ lng: longitude, lat: latitude }, 'Your Current Location');
+                    },
+                    () => alert('Error: Unable to retrieve your location')
+                );
+            } else {
+                alert('Geolocation is not supported by your browser');
+            }
+        }
+
+        function changeMapStyle(style) {
+            map.setStyle(`https://api.tomtom.com/style/1/style/*?map=2/${style}&poi=2/${style}&key=${apiKey}`);
+        }
+
+        function toggleTraffic() {
+            trafficEnabled = !trafficEnabled;
+
+            if (trafficEnabled) {
+                map.showTrafficFlow();
+                document.getElementById('trafficStatus').textContent = 'ON';
+            } else {
+                map.hideTrafficFlow();
+                document.getElementById('trafficStatus').textContent = 'OFF';
+            }
+        }
+
+        function toggleIncidents() {
+            incidentsEnabled = !incidentsEnabled;
+
+            if (incidentsEnabled) {
+                map.showTrafficIncidents();
+                document.getElementById('incidentsStatus').textContent = 'ON';
+            } else {
+                map.hideTrafficIncidents();
+                document.getElementById('incidentsStatus').textContent = 'OFF';
+            }
+        }
+    </script>
+</body>
+
+</html>
