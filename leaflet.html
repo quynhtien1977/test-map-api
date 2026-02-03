@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Tester - OpenStreetMap</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 10px 20px;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            color: #f1f5f9;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            border-color: #6366f1;
+            transform: translateY(-50%) translateX(-5px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 2px solid #334155;
+            background: #0f172a;
+            color: #f1f5f9;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input {
+            flex: 1;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary {
+            background: #0f172a;
+            border: 2px solid #334155;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+        }
+
+        .map-style {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .map-style label {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .map-style select {
+            flex: 1;
+        }
+
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label {
+            color: #cbd5e1;
+        }
+
+        .info-value {
+            color: #6366f1;
+            font-weight: 700;
+        }
+
+        /* MAP CONTAINER - CRITICAL */
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 20px;
+            border: 2px solid #334155;
+            margin-bottom: 20px;
+            background: #e0e0e0;
+        }
+
+        .guide {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .guide h3 {
+            margin-bottom: 15px;
+        }
+
+        .guide ul {
+            list-style: none;
+        }
+
+        .guide li {
+            padding: 10px;
+            background: #1e293b;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+        }
+
+        .guide strong {
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>🗺️ Map Tester - OpenStreetMap</h1>
+            <p class="subtitle">Test and explore map features - 100% Free, No API Key Required!</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search for a location...">
+                <button id="searchBtn">🔍 Search</button>
+            </div>
+
+            <div class="btn-grid">
+                <button id="currentLocationBtn" class="btn-secondary">📍 My Location</button>
+                <button id="clearMarkersBtn" class="btn-danger">🗑️ Clear Markers</button>
+                <button id="zoomInBtn" class="btn-secondary">➕ Zoom In</button>
+                <button id="zoomOutBtn" class="btn-secondary">➖ Zoom Out</button>
+            </div>
+
+            <div class="map-style">
+                <label>Map Style:</label>
+                <select id="mapType">
+                    <option value="standard">Standard</option>
+                    <option value="humanitarian">Humanitarian</option>
+                    <option value="topo">Topographic</option>
+                    <option value="dark">Dark Mode</option>
+                </select>
+            </div>
+
+            <div class="info">
+                <div class="info-item">
+                    <span class="info-label">Markers:</span>
+                    <span id="markerCount" class="info-value">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Zoom Level:</span>
+                    <span id="zoomLevel" class="info-value">10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAP CONTAINER -->
+        <div id="map"></div>
+
+        <div class="guide">
+            <h3>💡 Quick Guide</h3>
+            <ul>
+                <li><strong>Search:</strong> Enter a location and click Search</li>
+                <li><strong>Add Marker:</strong> Click anywhere on the map</li>
+                <li><strong>View Info:</strong> Click on markers to see details</li>
+                <li><strong>Change View:</strong> Use the Map Style dropdown</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+        let currentLayer;
+
+        // Tile layers
+        const tileLayers = {
+            standard: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }),
+            humanitarian: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }),
+            topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 17
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap, © CARTO',
+                maxZoom: 19
+            })
+        };
+
+        // Initialize map
+        function initMap() {
+            console.log('Initializing map...');
+
+            // Create map
+            map = L.map('map').setView([-6.2088, 106.8456], 10);
+
+            // Add tile layer
+            currentLayer = tileLayers.standard;
+            currentLayer.addTo(map);
+
+            // Fix size
+            setTimeout(() => map.invalidateSize(), 200);
+
+            // Click to add marker
+            map.on('click', (e) => addMarker(e.latlng));
+
+            // Zoom listener
+            map.on('zoomend', () => {
+                document.getElementById('zoomLevel').textContent = map.getZoom();
+            });
+
+            console.log('Map initialized!');
+        }
+
+        // Add marker
+        function addMarker(latlng) {
+            const marker = L.marker([latlng.lat, latlng.lng]).addTo(map);
+            marker.bindPopup(`<b>Marker ${markers.length + 1}</b><br>Lat: ${latlng.lat.toFixed(4)}<br>Lng: ${latlng.lng.toFixed(4)}`);
+            markers.push(marker);
+            document.getElementById('markerCount').textContent = markers.length;
+        }
+
+        // Search
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return alert('Enter a location');
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                const data = await res.json();
+                if (data[0]) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    map.setView([lat, lng], 15);
+                    addMarker({ lat, lng });
+                } else {
+                    alert('Location not found');
+                }
+            } catch (e) {
+                alert('Search error');
+            }
+        });
+
+        // Current location
+        document.getElementById('currentLocationBtn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+                    addMarker({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                });
+            }
+        });
+
+        // Clear markers
+        document.getElementById('clearMarkersBtn').addEventListener('click', () => {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            document.getElementById('markerCount').textContent = 0;
+        });
+
+        // Zoom buttons
+        document.getElementById('zoomInBtn').addEventListener('click', () => map.setZoom(map.getZoom() + 1));
+        document.getElementById('zoomOutBtn').addEventListener('click', () => map.setZoom(map.getZoom() - 1));
+
+        // Map style
+        document.getElementById('mapType').addEventListener('change', (e) => {
+            map.removeLayer(currentLayer);
+            currentLayer = tileLayers[e.target.value];
+            currentLayer.addTo(map);
+        });
+
+        // Start
+        window.addEventListener('load', initMap);
+    </script>
+</body>
+
+</html>

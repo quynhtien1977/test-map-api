@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps API Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 10px 20px;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            color: #f1f5f9;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            border-color: #6366f1;
+            transform: translateY(-50%) translateX(-5px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+
+        .api-key-notice {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .api-key-notice strong {
+            color: #78350f;
+        }
+
+        .controls {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 2px solid #334155;
+            background: #0f172a;
+            color: #f1f5f9;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input {
+            flex: 1;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-secondary {
+            background: #0f172a;
+            border: 2px solid #334155;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+        }
+
+        .map-style {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .map-style label {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .map-style select {
+            flex: 1;
+        }
+
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label {
+            color: #cbd5e1;
+        }
+
+        .info-value {
+            color: #6366f1;
+            font-weight: 700;
+        }
+
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 20px;
+            border: 2px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        .guide {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .guide h3 {
+            margin-bottom: 15px;
+        }
+
+        .guide ul {
+            list-style: none;
+        }
+
+        .guide li {
+            padding: 10px;
+            background: #1e293b;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+        }
+
+        .guide strong {
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>🗺️ Google Maps API Tester</h1>
+            <p class="subtitle">Test Google Maps with your API key</p>
+        </div>
+
+        <div class="api-key-notice">
+            <strong>⚠️ API Key Required:</strong> Enter your Google Maps API key below. Billing must be enabled in your
+            Google Cloud project.
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="apiKeyInput" placeholder="Enter your Google Maps API key here...">
+                <button id="loadMapBtn">🔑 Load Map</button>
+            </div>
+
+            <div class="search-box" id="searchContainer" style="display: none;">
+                <input type="text" id="searchInput" placeholder="Search for a location...">
+                <button id="searchBtn">🔍 Search</button>
+            </div>
+
+            <div id="mapControls" style="display: none;">
+                <div class="btn-grid">
+                    <button id="currentLocationBtn" class="btn-secondary">📍 My Location</button>
+                    <button id="clearMarkersBtn" class="btn-danger">🗑️ Clear Markers</button>
+                    <button id="zoomInBtn" class="btn-secondary">➕ Zoom In</button>
+                    <button id="zoomOutBtn" class="btn-secondary">➖ Zoom Out</button>
+                </div>
+
+                <div class="map-style">
+                    <label>Map Type:</label>
+                    <select id="mapType">
+                        <option value="roadmap">Roadmap</option>
+                        <option value="satellite">Satellite</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="terrain">Terrain</option>
+                    </select>
+                </div>
+
+                <div class="info">
+                    <div class="info-item">
+                        <span class="info-label">Markers:</span>
+                        <span id="markerCount" class="info-value">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Zoom Level:</span>
+                        <span id="zoomLevel" class="info-value">10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="guide">
+            <h3>💡 Quick Guide</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Enter your Google Maps API key and click "Load Map"</li>
+                <li><strong>Search:</strong> Enter a location and click Search</li>
+                <li><strong>Add Marker:</strong> Click anywhere on the map</li>
+                <li><strong>View Info:</strong> Click on markers to see details</li>
+                <li><strong>Change View:</strong> Use the Map Type dropdown</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let markers = [];
+        let geocoder;
+        let infoWindow;
+
+        document.getElementById('loadMapBtn').addEventListener('click', loadGoogleMaps);
+
+        function loadGoogleMaps() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!apiKey) {
+                alert('Please enter your Google Maps API key');
+                return;
+            }
+
+            // Load Google Maps script
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            script.onerror = () => {
+                alert('Failed to load Google Maps. Check your API key and billing status.');
+            };
+            document.head.appendChild(script);
+        }
+
+        function initMap() {
+            const defaultLocation = { lat: -6.2088, lng: 106.8456 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: defaultLocation,
+                zoom: 10,
+                mapTypeId: 'roadmap'
+            });
+
+            geocoder = new google.maps.Geocoder();
+            infoWindow = new google.maps.InfoWindow();
+
+            map.addListener('click', (event) => {
+                addMarker(event.latLng);
+            });
+
+            map.addListener('zoom_changed', () => {
+                document.getElementById('zoomLevel').textContent = map.getZoom();
+            });
+
+            // Show controls
+            document.getElementById('searchContainer').style.display = 'flex';
+            document.getElementById('mapControls').style.display = 'block';
+
+            initEventListeners();
+
+            console.log('Google Maps initialized successfully!');
+        }
+
+        function initEventListeners() {
+            document.getElementById('searchBtn').addEventListener('click', searchLocation);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchLocation();
+            });
+            document.getElementById('currentLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('clearMarkersBtn').addEventListener('click', clearMarkers);
+            document.getElementById('zoomInBtn').addEventListener('click', () => map.setZoom(map.getZoom() + 1));
+            document.getElementById('zoomOutBtn').addEventListener('click', () => map.setZoom(map.getZoom() - 1));
+            document.getElementById('mapType').addEventListener('change', (e) => map.setMapTypeId(e.target.value));
+        }
+
+        function searchLocation() {
+            const searchInput = document.getElementById('searchInput').value;
+            if (!searchInput.trim()) {
+                alert('Please enter a location to search');
+                return;
+            }
+
+            geocoder.geocode({ address: searchInput }, (results, status) => {
+                if (status === 'OK') {
+                    const location = results[0].geometry.location;
+                    map.setCenter(location);
+                    map.setZoom(15);
+                    addMarker(location, results[0].formatted_address);
+                } else {
+                    alert('Location not found: ' + status);
+                }
+            });
+        }
+
+        function addMarker(location, title = null) {
+            const marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                animation: google.maps.Animation.DROP,
+                title: title || `Marker ${markers.length + 1}`
+            });
+
+            if (!title) {
+                geocoder.geocode({ location: location }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        marker.setTitle(results[0].formatted_address);
+                    }
+                });
+            }
+
+            marker.addListener('click', () => {
+                const content = `
+                    <div style="padding: 10px; font-family: 'Inter', sans-serif;">
+                        <h3 style="margin: 0 0 10px 0; color: #1e293b;">${marker.getTitle()}</h3>
+                        <p style="margin: 5px 0; color: #475569;">
+                            <strong>Latitude:</strong> ${location.lat().toFixed(6)}<br>
+                            <strong>Longitude:</strong> ${location.lng().toFixed(6)}
+                        </p>
+                    </div>
+                `;
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
+            });
+
+            markers.push(marker);
+            document.getElementById('markerCount').textContent = markers.length;
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            document.getElementById('markerCount').textContent = 0;
+            infoWindow.close();
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        map.setCenter(pos);
+                        map.setZoom(15);
+                        addMarker(pos, 'Your Current Location');
+                    },
+                    () => alert('Error: The Geolocation service failed.')
+                );
+            } else {
+                alert('Error: Your browser doesn\'t support geolocation.');
+            }
+        }
+
+        // Make initMap globally accessible
+        window.initMap = initMap;
+    </script>
+</body>
+
+</html>
