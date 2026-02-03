@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapbox Tester</title>
+
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="shared-styles.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Mapbox GL JS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">← Back</a>
+            <h1>🗺️ Mapbox Tester</h1>
+            <p class="subtitle">Modern vector maps with 3D terrain and custom styling</p>
+        </div>
+
+        <div class="api-key-notice">
+            <strong>🔑 API Key Required:</strong> Get your free Mapbox API key at <a href="https://account.mapbox.com/"
+                target="_blank" style="color: #78350f; text-decoration: underline;">mapbox.com</a> (50,000 free map
+            loads/month)
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="apiKeyInput" placeholder="Enter your Mapbox API key here...">
+                <button id="loadMapBtn" class="btn-primary">🔑 Load Map</button>
+            </div>
+
+            <div id="mapControls" style="display: none;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search for a location...">
+                    <button id="searchBtn" class="btn-primary">🔍 Search</button>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="currentLocationBtn" class="btn-secondary">📍 My Location</button>
+                    <button id="clearMarkersBtn" class="btn-danger">🗑️ Clear Markers</button>
+                    <button id="zoomInBtn" class="btn-secondary">➕ Zoom In</button>
+                    <button id="zoomOutBtn" class="btn-secondary">➖ Zoom Out</button>
+                </div>
+
+                <div class="map-style">
+                    <label>Map Style:</label>
+                    <select id="mapStyle">
+                        <option value="streets-v12">Streets</option>
+                        <option value="satellite-streets-v12">Satellite Streets</option>
+                        <option value="outdoors-v12">Outdoors</option>
+                        <option value="dark-v11">Dark</option>
+                        <option value="light-v11">Light</option>
+                        <option value="navigation-day-v1">Navigation Day</option>
+                        <option value="navigation-night-v1">Navigation Night</option>
+                    </select>
+                </div>
+
+                <div class="btn-grid">
+                    <button id="toggle3DBtn" class="btn-secondary">🏢 Toggle 3D Buildings</button>
+                    <button id="toggleTerrainBtn" class="btn-secondary">⛰️ Toggle Terrain</button>
+                </div>
+
+                <div class="info">
+                    <div class="info-item">
+                        <span class="info-label">Markers:</span>
+                        <span id="markerCount" class="info-value">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Zoom Level:</span>
+                        <span id="zoomLevel" class="info-value">10</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">3D Buildings:</span>
+                        <span id="buildings3DStatus" class="info-value">OFF</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Terrain:</span>
+                        <span id="terrainStatus" class="info-value">OFF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="guide">
+            <h3>💡 Mapbox Features</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Enter your Mapbox API key and click "Load Map"</li>
+                <li><strong>Vector Maps:</strong> Smooth zooming with crisp text at any zoom level</li>
+                <li><strong>3D Buildings:</strong> Toggle realistic 3D building extrusions</li>
+                <li><strong>Terrain:</strong> Enable 3D terrain with hillshading</li>
+                <li><strong>7 Styles:</strong> Choose from Streets, Satellite, Outdoors, Dark, Light, and Navigation
+                    modes</li>
+                <li><strong>Custom Styling:</strong> Mapbox uses vector tiles for ultimate customization</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let markers = [];
+        let buildings3DEnabled = false;
+        let terrainEnabled = false;
+
+        document.getElementById('loadMapBtn').addEventListener('click', loadMapbox);
+
+        function loadMapbox() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!apiKey) {
+                alert('Please enter your Mapbox API key');
+                return;
+            }
+
+            mapboxgl.accessToken = apiKey;
+
+            try {
+                initMap();
+            } catch (error) {
+                alert('Failed to load Mapbox. Check your API key: ' + error.message);
+            }
+        }
+
+        function initMap() {
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [106.8456, -6.2088],
+                zoom: 10
+            });
+
+            map.on('load', () => {
+                // Show controls
+                document.getElementById('mapControls').style.display = 'block';
+
+                // Add navigation controls
+                map.addControl(new mapboxgl.NavigationControl());
+
+                // Click to add marker
+                map.on('click', (e) => {
+                    addMarker(e.lngLat);
+                });
+
+                // Update zoom level
+                map.on('zoom', () => {
+                    document.getElementById('zoomLevel').textContent = Math.round(map.getZoom());
+                });
+
+                initEventListeners();
+                console.log('Mapbox initialized successfully!');
+            });
+
+            map.on('error', (e) => {
+                alert('Map error: ' + e.error.message);
+            });
+        }
+
+        function initEventListeners() {
+            document.getElementById('searchBtn').addEventListener('click', searchLocation);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchLocation();
+            });
+            document.getElementById('currentLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('clearMarkersBtn').addEventListener('click', clearMarkers);
+            document.getElementById('zoomInBtn').addEventListener('click', () => map.zoomIn());
+            document.getElementById('zoomOutBtn').addEventListener('click', () => map.zoomOut());
+            document.getElementById('mapStyle').addEventListener('change', (e) => changeMapStyle(e.target.value));
+            document.getElementById('toggle3DBtn').addEventListener('click', toggle3DBuildings);
+            document.getElementById('toggleTerrainBtn').addEventListener('click', toggleTerrain);
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a location to search');
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&limit=1`
+                );
+                const data = await response.json();
+
+                if (data.features && data.features.length > 0) {
+                    const [lng, lat] = data.features[0].center;
+                    const placeName = data.features[0].place_name;
+
+                    map.flyTo({
+                        center: [lng, lat],
+                        zoom: 14,
+                        essential: true
+                    });
+
+                    addMarker({ lng, lat }, placeName);
+                } else {
+                    alert('Location not found');
+                }
+            } catch (error) {
+                alert('Search error: ' + error.message);
+            }
+        }
+
+        function addMarker(lngLat, title = null) {
+            const marker = new mapboxgl.Marker({ color: '#6366f1' })
+                .setLngLat([lngLat.lng, lngLat.lat])
+                .setPopup(
+                    new mapboxgl.Popup().setHTML(`
+                        <div style="font-family: 'Inter', sans-serif; padding: 5px;">
+                            <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 14px;">
+                                ${title || `Marker ${markers.length + 1}`}
+                            </h3>
+                            <p style="margin: 0; color: #475569; font-size: 12px;">
+                                <strong>Lat:</strong> ${lngLat.lat.toFixed(6)}<br>
+                                <strong>Lng:</strong> ${lngLat.lng.toFixed(6)}
+                            </p>
+                        </div>
+                    `)
+                )
+                .addTo(map);
+
+            markers.push(marker);
+            document.getElementById('markerCount').textContent = markers.length;
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => marker.remove());
+            markers = [];
+            document.getElementById('markerCount').textContent = 0;
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        map.flyTo({
+                            center: [longitude, latitude],
+                            zoom: 14,
+                            essential: true
+                        });
+                        addMarker({ lng: longitude, lat: latitude }, 'Your Current Location');
+                    },
+                    () => alert('Error: Unable to retrieve your location')
+                );
+            } else {
+                alert('Geolocation is not supported by your browser');
+            }
+        }
+
+        function changeMapStyle(style) {
+            map.setStyle(`mapbox://styles/mapbox/${style}`);
+
+            // Re-add 3D buildings and terrain after style change
+            map.once('style.load', () => {
+                if (buildings3DEnabled) {
+                    add3DBuildings();
+                }
+                if (terrainEnabled) {
+                    addTerrain();
+                }
+            });
+        }
+
+        function toggle3DBuildings() {
+            buildings3DEnabled = !buildings3DEnabled;
+
+            if (buildings3DEnabled) {
+                add3DBuildings();
+                document.getElementById('buildings3DStatus').textContent = 'ON';
+            } else {
+                if (map.getLayer('3d-buildings')) {
+                    map.removeLayer('3d-buildings');
+                }
+                document.getElementById('buildings3DStatus').textContent = 'OFF';
+            }
+        }
+
+        function add3DBuildings() {
+            if (!map.getLayer('3d-buildings')) {
+                map.addLayer({
+                    'id': '3d-buildings',
+                    'source': 'composite',
+                    'source-layer': 'building',
+                    'filter': ['==', 'extrude', 'true'],
+                    'type': 'fill-extrusion',
+                    'minzoom': 15,
+                    'paint': {
+                        'fill-extrusion-color': '#aaa',
+                        'fill-extrusion-height': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            15,
+                            0,
+                            15.05,
+                            ['get', 'height']
+                        ],
+                        'fill-extrusion-base': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            15,
+                            0,
+                            15.05,
+                            ['get', 'min_height']
+                        ],
+                        'fill-extrusion-opacity': 0.6
+                    }
+                });
+            }
+        }
+
+        function toggleTerrain() {
+            terrainEnabled = !terrainEnabled;
+
+            if (terrainEnabled) {
+                addTerrain();
+                document.getElementById('terrainStatus').textContent = 'ON';
+            } else {
+                map.setTerrain(null);
+                document.getElementById('terrainStatus').textContent = 'OFF';
+            }
+        }
+
+        function addTerrain() {
+            map.addSource('mapbox-dem', {
+                'type': 'raster-dem',
+                'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                'tileSize': 512,
+                'maxzoom': 14
+            });
+
+            map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+        }
+    </script>
+</body>
+
+</html>

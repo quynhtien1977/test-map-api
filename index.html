@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Map API Testing - Choose Your Option</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -23,51 +18,52 @@
             justify-content: center;
             padding: 20px;
         }
-
+        
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             width: 100%;
             text-align: center;
         }
-
+        
         .header {
             margin-bottom: 60px;
         }
-
+        
         h1 {
             font-size: 3.5rem;
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 20px;
             animation: fadeInDown 0.8s ease-out;
         }
-
+        
         .subtitle {
             font-size: 1.3rem;
             color: #cbd5e1;
             animation: fadeInUp 0.8s ease-out;
         }
-
+        
         .options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
             margin-top: 60px;
         }
-
+        
         .option-card {
             background: #1e293b;
             border: 2px solid #334155;
             border-radius: 24px;
-            padding: 50px 40px;
+            padding: 40px 30px;
             transition: all 0.4s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
             animation: fadeIn 1s ease-out;
         }
-
+        
         .option-card::before {
             content: '';
             position: absolute;
@@ -79,211 +75,269 @@
             opacity: 0;
             transition: opacity 0.4s ease;
         }
-
+        
         .option-card:hover {
             transform: translateY(-10px);
             border-color: #6366f1;
             box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
         }
-
+        
         .option-card:hover::before {
             opacity: 1;
         }
-
+        
         .option-content {
             position: relative;
             z-index: 1;
         }
-
+        
         .icon {
-            font-size: 5rem;
-            margin-bottom: 30px;
+            font-size: 4rem;
+            margin-bottom: 20px;
             display: block;
         }
-
+        
         .option-title {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             color: #f1f5f9;
         }
-
+        
         .option-description {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             color: #cbd5e1;
-            margin-bottom: 25px;
-            line-height: 1.6;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            min-height: 40px;
         }
-
+        
         .features {
             list-style: none;
             text-align: left;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
-
+        
         .features li {
-            padding: 10px 0;
+            padding: 6px 0;
             color: #94a3b8;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-
+        
         .features li::before {
             content: '✓';
             color: #10b981;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
-
+        
         .badge {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-
+        
         .badge-free {
             background: #10b981;
             color: white;
         }
-
+        
         .badge-premium {
             background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
             color: white;
         }
-
+        
+        .badge-tier {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+        }
+        
         .cta-button {
             display: inline-block;
-            padding: 16px 40px;
+            padding: 12px 30px;
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
             text-decoration: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
         }
-
+        
         .cta-button:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
         }
-
+        
         @keyframes fadeInDown {
             from {
                 opacity: 0;
                 transform: translateY(-30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-
+        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-
+        
         @keyframes fadeIn {
             from {
                 opacity: 0;
             }
-
             to {
                 opacity: 1;
             }
         }
-
-        .option-card:nth-child(1) {
-            animation-delay: 0.2s;
+        
+        .option-card:nth-child(1) { animation-delay: 0.1s; }
+        .option-card:nth-child(2) { animation-delay: 0.2s; }
+        .option-card:nth-child(3) { animation-delay: 0.3s; }
+        .option-card:nth-child(4) { animation-delay: 0.4s; }
+        .option-card:nth-child(5) { animation-delay: 0.5s; }
+        
+        @media (max-width: 1200px) {
+            .options {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
         }
-
-        .option-card:nth-child(2) {
-            animation-delay: 0.4s;
-        }
-
-        @media (max-width: 900px) {
+        
+        @media (max-width: 768px) {
             .options {
                 grid-template-columns: 1fr;
             }
-
+            
             h1 {
                 font-size: 2.5rem;
             }
-
+            
             .subtitle {
                 font-size: 1.1rem;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
-            <h1>🗺️ Map API Testing</h1>
-            <p class="subtitle">Choose your preferred mapping solution to start testing</p>
+            <h1>🗺️ Map API Testing Platform</h1>
+            <p class="subtitle">Compare and test 5 different mapping solutions</p>
         </div>
-
+        
         <div class="options">
-            <!-- Leaflet / OpenStreetMap Option -->
+            <!-- Leaflet / OpenStreetMap -->
             <div class="option-card" onclick="window.location.href='leaflet.html'">
                 <div class="option-content">
                     <span class="badge badge-free">100% FREE</span>
                     <span class="icon">🌍</span>
                     <h2 class="option-title">Leaflet + OpenStreetMap</h2>
                     <p class="option-description">
-                        Open-source mapping solution with no API key required
+                        Open-source mapping with no API key required
                     </p>
                     <ul class="features">
                         <li>No API key needed</li>
-                        <li>No billing required</li>
                         <li>Unlimited usage</li>
-                        <li>4 map styles included</li>
-                        <li>Community-driven data</li>
+                        <li>4 map styles</li>
                         <li>Privacy-friendly</li>
                     </ul>
-                    <a href="leaflet.html" class="cta-button">Test Leaflet Maps</a>
+                    <a href="leaflet.html" class="cta-button">Test Now</a>
                 </div>
             </div>
-
-            <!-- Google Maps API Option -->
+            
+            <!-- Mapbox -->
+            <div class="option-card" onclick="window.location.href='mapbox.html'">
+                <div class="option-content">
+                    <span class="badge badge-tier">50K FREE/MONTH</span>
+                    <span class="icon">🗺️</span>
+                    <h2 class="option-title">Mapbox</h2>
+                    <p class="option-description">
+                        Modern vector maps with custom styling
+                    </p>
+                    <ul class="features">
+                        <li>API key required</li>
+                        <li>50K map loads/month</li>
+                        <li>6 map styles + 3D</li>
+                        <li>Custom styling</li>
+                    </ul>
+                    <a href="mapbox.html" class="cta-button">Test Now</a>
+                </div>
+            </div>
+            
+            <!-- TomTom -->
+            <div class="option-card" onclick="window.location.href='tomtom.html'">
+                <div class="option-content">
+                    <span class="badge badge-tier">2.5K FREE/DAY</span>
+                    <span class="icon">🚗</span>
+                    <h2 class="option-title">TomTom Maps</h2>
+                    <p class="option-description">
+                        Automotive-grade maps with traffic data
+                    </p>
+                    <ul class="features">
+                        <li>API key required</li>
+                        <li>2,500 requests/day</li>
+                        <li>Traffic overlay</li>
+                        <li>POI search</li>
+                    </ul>
+                    <a href="tomtom.html" class="cta-button">Test Now</a>
+                </div>
+            </div>
+            
+            <!-- Azure Maps -->
+            <div class="option-card" onclick="window.location.href='azure-maps.html'">
+                <div class="option-content">
+                    <span class="badge badge-tier">1K FREE/DAY</span>
+                    <span class="icon">☁️</span>
+                    <h2 class="option-title">Azure Maps</h2>
+                    <p class="option-description">
+                        Microsoft's enterprise mapping solution
+                    </p>
+                    <ul class="features">
+                        <li>Subscription key required</li>
+                        <li>1,000 transactions/day</li>
+                        <li>Weather overlay</li>
+                        <li>Azure integration</li>
+                    </ul>
+                    <a href="azure-maps.html" class="cta-button">Test Now</a>
+                </div>
+            </div>
+            
+            <!-- Google Maps -->
             <div class="option-card" onclick="window.location.href='google-maps.html'">
                 <div class="option-content">
                     <span class="badge badge-premium">REQUIRES BILLING</span>
                     <span class="icon">🗺️</span>
-                    <h2 class="option-title">Google Maps API</h2>
+                    <h2 class="option-title">Google Maps</h2>
                     <p class="option-description">
-                        Industry-standard mapping with advanced features
+                        Industry-standard with advanced features
                     </p>
                     <ul class="features">
-                        <li>API key required</li>
-                        <li>Billing must be enabled</li>
-                        <li>$200/month free credit</li>
-                        <li>Multiple map types</li>
+                        <li>API key + billing</li>
+                        <li>$200/month credit</li>
                         <li>Street View support</li>
                         <li>Advanced geocoding</li>
                     </ul>
-                    <a href="google-maps.html" class="cta-button">Test Google Maps</a>
+                    <a href="google-maps.html" class="cta-button">Test Now</a>
                 </div>
             </div>
         </div>
     </div>
 </body>
-
 </html>
